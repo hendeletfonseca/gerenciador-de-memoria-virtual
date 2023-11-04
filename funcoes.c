@@ -72,7 +72,7 @@ Memória Secundária
 */
 
 
-void configuracoes(int *tam_mf, int *tam_ms, int *tam_pag, int *tam_qm, int *tam_end_logico){
+void configuracoes(int *tam_mf, int *tam_ms, int *tam_pag, int *tam_qm, int *tam_end_logico) {
     int aux;
 
     printf("Digite o tamanho desejado para cada uma das opcoes: \n");
@@ -105,7 +105,7 @@ void configuracoes(int *tam_mf, int *tam_ms, int *tam_pag, int *tam_qm, int *tam
 }
 
 void cria_processo(int num_processo, int tamanho_processo) {
-
+    
 }
 
 void executa_processo(int num_processo, char flag, int tamEnd_processo) {
