@@ -90,7 +90,7 @@ P *inicia_processo(char *nome_processo, int tam_processo){
    
     P *novo;
 
-    novo = (*novo)malloc(tam_processo + sizeof(novo)); // tam_processo ja estara em bytes 
+    novo = (*P)malloc(tam_processo*sizeof(P)); // tam_processo ja estara em bytes 
     strcpy(nome_processo, novo->identificador);
     strcpy(novo->estado_processo, "Novo");
     novo->tam_imagem = tam_processo;
@@ -130,25 +130,35 @@ void ver_mp(){
 void ver_ms(){
     
 }
+void termino(){
 
-// amanda
+} 
+void instrucao_cpu (){
+
+} 
+void instrucao_es(){
+
+}
+
+// amanda --raio mudou strcmp para comparar caracter a caracter nao necessario em sercmp
+// flag_processo ser apenas um caracter
 void flags(P *proc, char *flag_processo, char *nome_processo, int tam_processo, MS *m_secundaria){
 
     P *novo;
 
     // atualizacoes do processo sao na funcao de flag
 
-    if(strcmp(flag_processo, 'P') == 0){
+    if(flag_processo == 'P'){
         impressao();
         instrucao_cpu();
         impressao();
     }
-    if(strcmp(flag_processo, 'I') == 0){
+    if(flag_processo ==  'I'){
         impressao();
         instrucao_es();
         impressao();
     }
-    if(strcmp(flag_processo, 'C') == 0){
+    if(flag_processo == 'C'){
         novo = inicia_processo(nome_processo, tam_processo);
         proc = novo;
         //m_secundaria->processos = proc;
@@ -156,17 +166,17 @@ void flags(P *proc, char *flag_processo, char *nome_processo, int tam_processo, 
         ta aqui pra nao esquecer */
         impressao();        
     }
-    if(strcmp(flag_processo, 'R') == 0){
+    if(flag_processo == 'R'){
         impressao();
         leitura();
         impressao();
     }
-    if(strcmp(flag_processo, 'W') == 0){
+    if(flag_processo == 'W'){
         impressao();
         escrita();
         impressao();
     }
-    if(strcmp(flag_processo, 'T') == 0){
+    if(flag_processo == 'T'){
         impressao();
         termino();
         impressao();
