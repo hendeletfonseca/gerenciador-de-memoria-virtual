@@ -2,77 +2,50 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <locale.h>
+#include <string.h>
 
-/*Tamanho total da Memória física (que deve ser múltiplo de tamanho do quadro) e
-Memória Secundária
-● Tamanho da página de um processo e quadro de memória;
-● Tamanho em bits do endereço lógico.*/
+/* estrutura das variáveis*/
 
-/*P - instrução a ser executada pela CPU
-● I - instrução de I/O
-● C - criação (submissão de um processo)
-● R - pedido de leitura em um endereço lógico
-● W - pedido de escrita em um endereço lógico de um dado valor
-● T - terminação de processo
-*/
+typedef struct pagina {
+    int *tam_pagina; 
+    int *tam_endereco_virtual;
+    int *endereco_virtual; // endereco da pag na memoria virtual
+    P *processo_associado; // processo a qual a pg esta associada
+} PG;
 
-/*funcoes:
-- void operacao(File *arquivo); {le o arquivo e identifica qual operação será feita}
-- void substituicao(fds nao sei o que vai aqui, depois a gente pensa); {realiza a operação de troca das páginas}
-- void *mapeamento(int endereco_logico, int *endereco_fisico);
-- int MMU(endereco_logico); -- retona o endereco fisico
--
-- implementar swapper
-- alocar pagina na MP
-- implemetar politica de substituicao de pag (LRU)
-Atenção, se o quadro escolhido
-armazenar uma página (a que será substituída) que foi modificada, a gravação desta
-deve ser realizada antes da carga da nova página a ser trazida para memória.
-
-Gerenciador de memoria é um método
-*/
-
-
-typedef struct Processo {
-    int id; //ignorar char P
-    int bitP;
-    int bitM;
-    int tam_imagem;
-    int nQuadro; //numero do quadro em MP, quando a referida pagina esta em memoria.
-} PI;
-
-typedef struct Pagina {
-    int tam;
-    PI* processo;
-} P;
-
-typedef struct TabelaPaginas {
-    P* pagina;
-    int numPaginas; //Tamanho do vetor Paginas.
-    int tamTabela  = numPaginas * (pagina[0]->tam);
+typedef struct tabela_paginas {
+    //PG *pagina; -----> endereço virtual 
+    int bit_p; // bit de presenca
+    int bit_m; // bit de modificacao
+    int end_quadro; // endereco da pagina na memoria principal
 } TP;
 
-typedef struct MemoriaPrincipal {
-    int tamMemoria;
-    int endFisico;
-    int* quadroMemoria;
+typedef struct processo {
+    char *identificador; // nome do processo lido no arquivo
+    char *estado_processo; // informa em qual estado o processo esta: novo, pronto, bloqueado, executando, finalizado
+    int *tam_imagem; // tamanho do processo
+    int *endereco_fisico; // precisa disso aqui? uma vez q a propria variavel processo ja guarda seu endereço
+    TP *tab_paginas; // tabela de paginas de um respectivo processo (qual estrutura de dados sera usada para a tabela de paginas?)
+    int tam_tabela_paginas; // tamanho da tabela de paginas
+} P;
+
+typedef struct memoria_principal {
+    int *tam_mp;
+    int *num_quadros;
+    TP *quadro_paginas; // isso aq eh uma fila(?)
 } MP;
 
-typedef struct MemoriaSecundaria {
-    int tamMemoria;
-    int endLogico;
+typedef struct memoria_secundaria {
+    int tam_ms;
+    P *processos; // todos os processos estarao aqui, É UMA ESTRUTURA DE DADOS!!!!
 } MS;
 
-/*Seu sistema GM deve conter as seguintes opções de configuração de mecanismos
-associados à memória virtual:
-● Tamanho total da Memória física (que deve ser múltiplo de tamanho do quadro) e
-Memória Secundária
-● Tamanho da página de um processo e quadro de memória;
-● Tamanho em bits do endereço lógico.
-*/
+/*funções utilizadas*/
 
-
-void configuracoes(int *tam_mf, int *tam_ms, int *tam_pag, int *tam_qm, int *tam_end_logico) {
+// amanda
+void configuracoes(int *tam_mf, int *tam_ms, int *tam_pag, int *tam_qm,
+ int *tam_end_logico, MP *m_principal, MS *m_secundaria, PG *pag) {
+   
     int aux;
 
     printf("Digite o tamanho desejado para cada uma das opcoes: \n");
@@ -85,7 +58,7 @@ void configuracoes(int *tam_mf, int *tam_ms, int *tam_pag, int *tam_qm, int *tam
     printf("2. Tamanho da memoria fisica (Deve ser multiplo do tamanho do quadro): \n");
     do {
         scanf("%d", &aux);
-    } while (aux % (*tam_qm) == 0);
+    } while (aux % (*tam_qm) != 0);
     scanf("%d", &aux);
     (*tam_mf) = aux;
     
@@ -102,36 +75,149 @@ void configuracoes(int *tam_mf, int *tam_ms, int *tam_pag, int *tam_qm, int *tam
     scanf("%d", &aux);
     aux = (sizeof(aux)) * 8;
     (*tam_end_logico) = aux;
+    //Endereço Lógico composto por numeros de paginas + tamanho da pagina
+    //Com tamanho da pagina do item 4 e mais o tamanho do endereço logico temos o numero de paginas.
+
+    // guardando as informações nas estruturas
+    m_principal->num_quadros = tam_qm;
+    m_principal->tam_mp = tam_mf;
+    m_secundaria->tam_ms = tam_ms;
+    pag->tam_pagina = tam_pag;
+    pag->tam_endereco_virtual = tam_end_logico;
 }
 
-void cria_processo(int num_processo, int tamanho_processo) {
+// amanda
+P *inicia_processo(MS *m_secundaria, char *nome_processo, int tam_processo){
+
+    P *aux;
+
+    // checa se o processo ja esta alocado na memoria
+    while(mem_secundaria->processos != NULL){
+        if(strcmp(mem_secundaria->processos->identificador) == 0){
+            res = true;
+            aux = mem_secundaria->processos;
+            break;
+        }
+        /*pula pro proximo*/
+    }
+    if(!res){
+        P *novo;
+
+        novo = (*P)malloc(tam_processo * sizeof(P)); // tam_processo ja estara em bytes 
+        strcpy(nome_processo, novo->identificador);
+        strcpy(novo->estado_processo, "Novo");
+        novo->tam_imagem = tam_processo;
+        /*endereço fisico: nao sei ainda
+        tab de paginas: quebrar o processo em paginas e alocar a memoria necessaria, tem q contar
+        qual o tamanho necessario p isso*/ 
+        return novo;
+    }
+    return aux;
+}
+
+// amanda
+void impressao_tp(TP *tabela_proc, int tam_tabela){
+
+    printf("=======================\n");
+    for(int i = 0; i < tam_tabela; i++){
+        printf("Lacuna %d: \n", i);
+        printf("Bit de presença na memória principal: %d \n", tabela_proc->bit_p);
+        printf("Bit de modificação da página: %d \n", tabela_proc->bit_m);
+        printf("Endereço do quadro na memória principal: %d \n", tabela_proc->end_quadro);
+    }
+    printf("=======================\n");
+}
+
+// amanda
+void impressao_p(P *proc){
+
+    printf("Dados do processo %s: \n", proc->identificador);
+    printf("----------------------\n");
+    printf("Estado do processo: %s \n", proc->estado_processo);
+    printf("Tamanho do processo: %d \n", proc->tam_imagem);
+    printf("Tabela de páginas associada: \n");
+    impressao_tp(proc->tab_paginas, proc->tam_tabela_paginas);
+    printf("\n");
+}
+
+void leitura(){
+    // le o endereco e escreve, deixando p dps so pq n sei fazer msm
+}
+
+void escrita(){
+    // mapeia o endereco e escreve, deixando p dps so pq n sei fazer msm
+}
+
+void termino(){
+    // remove o processo da fila de processos, ou seja, mata o processo
+}
+
+void instrucao_cpu(){
+    // instrucao a ser executada pela cpu
+}
+
+void instrucao_es(){
+    // instrucao de entrada/saida 
+}
+
+void ver_mp(){
     
 }
+void ver_ms(){
+    
+}
+void termino(){
 
-void executa_processo(int num_processo, char flag, int tamEnd_processo) {
-    switch (flag) {
+} 
+void instrucao_cpu (){
 
-        case 'P':
-            
-            break;
-        
-        case 'I':
+} 
+void instrucao_es(){
 
-            break
-        case 'C':
-            cria_processo(num_processo, tamEnd_processo);
-            break;
-        case 'R':
+}
 
-            break;
-        case 'W':
+// amanda --raio mudou strcmp para comparar caracter a caracter nao necessario em sercmp
+// flag_processo ser apenas um caracter
+void flags(P *proc, char *flag_processo, char *nome_processo, int tam_processo, MS *m_secundaria){
 
-            break;
-        case 'T':
+    P *novo;
 
-            break;
-            
-        default:
-            break;
+    // atualizacoes do processo sao na funcao de flag
+
+    if(flag_processo == 'P'){
+        impressao_p(proc); // antes da alteração 
+        instrucao_cpu();
+        impressao_p(proc); // depois da alteração
+    }
+    if(flag_processo ==  'I'){
+        impressao_p(proc);
+        instrucao_es();
+        impressao_p(proc);
+    }
+    if(flag_processo == 'C'){
+        novo = inicia_processo(m_secundaria, nome_processo, tam_processo);
+        proc = novo;
+        //m_secundaria->processos = proc;
+        /*qnd a estrutura de dados estiver definida vem aq e troca, so 
+        ta aqui pra nao esquecer */
+        impressao_p(proc);        
+    }
+    if(flag_processo == 'R'){
+        impressao_p(proc);
+        leitura();
+        impressao_p(proc);
+    }
+    if(flag_processo == 'W'){
+        impressao_p();
+        escrita();
+        impressao_p(proc);
+    }
+    if(flag_processo == 'T'){
+        impressao_p(proc);
+        termino();
+        impressao_p(proc);
+    }
+    else {
+        printf("Opção inválida. \n");
     }
 }
