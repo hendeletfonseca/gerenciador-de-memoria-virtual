@@ -18,9 +18,6 @@ int main(void){
     MS *mem_secundaria;
     PG *vetor_paginas;
 
-    // booleana auxiliar
-    bool res;
-
     configuracoes(&tamanho_mf, &tamanho_ms, &tamanho_pag, &tamanho_qm, &tamanho_el, mem_principal, mem_secundaria, vetor_paginas);
 
     // alocando a memoria necessaria
@@ -36,9 +33,6 @@ int main(void){
         printf("Erro na leitura da fila de processos. \n");
         exit(1);
     }
-
-    aux_processo = NULL;
-    res = false;
 
     // readline do arquivo e execucao
     while(fscanf(fila_processos, "%s %c %d", nome_processo, acao, &tam_processo)){

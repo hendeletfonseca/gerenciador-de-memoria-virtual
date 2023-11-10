@@ -89,7 +89,8 @@ void configuracoes(int *tam_mf, int *tam_ms, int *tam_pag, int *tam_qm,
 // amanda
 P *inicia_processo(MS *m_secundaria, char *nome_processo, int tam_processo){
 
-    P *aux;
+    P *aux = NULL;
+    bool res = false;
 
     // checa se o processo ja esta alocado na memoria
     while(mem_secundaria->processos != NULL){
