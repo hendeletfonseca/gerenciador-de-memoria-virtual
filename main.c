@@ -13,11 +13,11 @@ int main(void){
     int tamanho_mf, tamanho_ms, tamanho_pag, tamanho_qm, tamanho_el;
 
     // variaveis para alocacao de memoria
-    P *aux_processo;
     MP *mem_principal;
     MS *mem_secundaria;
     PG *vetor_paginas;
 
+    // configurando o espaco de memoria
     configuracoes(&tamanho_mf, &tamanho_ms, &tamanho_pag, &tamanho_qm, &tamanho_el, mem_principal, mem_secundaria, vetor_paginas);
 
     // alocando a memoria necessaria
@@ -36,7 +36,7 @@ int main(void){
 
     // readline do arquivo e execucao
     while(fscanf(fila_processos, "%s %c %d", nome_processo, acao, &tam_processo)){
-        flags(proc, acao, nome_processo, tam_processo, mem_secundaria);
+        flags(acao, nome_processo, tam_processo, mem_secundaria);
     }
     
     // fechando o arquivo

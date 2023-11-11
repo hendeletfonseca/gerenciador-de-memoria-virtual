@@ -141,6 +141,10 @@ void impressao_p(P *proc){
     printf("\n");
 }
 
+int calcula_enderecamento(){
+
+}
+
 void leitura(){
     // le o endereco e escreve, deixando p dps so pq n sei fazer msm
 }
@@ -167,8 +171,11 @@ void ver_mp(){
 void ver_ms(){
     
 }
-void termino(){
-
+void termino(P *proc, char *acao_processo, int *endereco){
+    /*pega o endereço e busca na tabela de paginas*/
+    /*checa se esta na memoria principal*/
+    /*se sim, remove da memoria principal*/
+    /*remove da tabela de paginas*/
 } 
 void instrucao_cpu (){
 
@@ -179,9 +186,22 @@ void instrucao_es(){
 
 // amanda --raio mudou strcmp para comparar caracter a caracter nao necessario em sercmp
 // flag_processo ser apenas um caracter
-void flags(P *proc, char *flag_processo, char *nome_processo, int tam_processo, MS *m_secundaria){
+void flags(char *flag_processo, char *nome_processo, int tam_processo, MS *m_secundaria){
 
-    P *novo;
+    P *proc, aux;
+    bool res = false;
+
+    // checa se o processo esta na memoria e acessa o ponteiro dele com o nome da flag do processo
+    while(m_secundaria->processos != NULL){
+        /*busca o processo na memoria*/
+        if(strcmp(m_secundaria->processos->identificador, nome_processo) == 0){
+            res = true;
+            break;
+        }
+    }
+    if(res) proc = m_secundaria->processos;
+    else proc = NULL;
+
 
     // atualizacoes do processo sao na funcao de flag
 
@@ -196,8 +216,8 @@ void flags(P *proc, char *flag_processo, char *nome_processo, int tam_processo, 
         impressao_p(proc);
     }
     if(flag_processo == 'C'){
-        novo = inicia_processo(m_secundaria, nome_processo, tam_processo);
-        proc = novo;
+        aux = inicia_processo(m_secundaria, nome_processo, tam_processo);
+        proc = aux;
         //m_secundaria->processos = proc;
         /*qnd a estrutura de dados estiver definida vem aq e troca, so 
         ta aqui pra nao esquecer */
