@@ -22,10 +22,10 @@ int main(void){
 
     // alocando a memoria necessaria
     mem_principal = (*mem_principal)malloc(sizeof(mem_principal) * mem_principal->tamanho_mp);
-    if(!mem_principal) exit(1);
+    if(!mem_principal) exit(2);
 
     mem_secundaria = (*mem_secundaria)malloc(sizeof(mem_secundaria) * mem_secundaria->tamanho_ms);
-    if(!mem_secundaria) exit(1);
+    if(!mem_secundaria) exit(3);
 
     // abrindo o arquivo
     FILE* fila_processos = fopen("processos.txt", "r");
@@ -35,7 +35,7 @@ int main(void){
     }
 
     // readline do arquivo e execucao
-    while(fscanf(fila_processos, "%s %c %d", nome_processo, acao, &tam_processo)){
+    while(fscanf(fila_processos, "%s %is %d", nome_processo, acao, &tam_processo)==3){
         flags(acao, nome_processo, tam_processo, mem_secundaria);
     }
     
