@@ -35,7 +35,7 @@ int main(void){
     }
 
     // readline do arquivo e execucao
-    while(fscanf(fila_processos, "%s %is %d", nome_processo, acao, &tam_processo)==3){
+    while(fscanf(fila_processos, "%s %is %d", nome_processo, acao, &tam_processo)){
         flags(acao, nome_processo, tam_processo, mem_secundaria);
     }
     

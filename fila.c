@@ -14,7 +14,7 @@ typedef struct fila{
 
 TF *cria (void){
     TF *f = (TF *)malloc(sizeof(TF));
-    f→n = f→ini = 0;
+    f->n = f->ini = 0;
     return f;
 }
 
