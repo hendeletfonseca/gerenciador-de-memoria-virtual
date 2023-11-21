@@ -33,7 +33,8 @@ typedef struct processo {
 typedef struct memoria_principal {
     int tam_mp;
     int num_quadros;
-    TP *fila_paginas;
+    int *vetor_paginas;
+    TP *fila_lru;
 } MP;
 
 typedef struct memoria_secundaria {
@@ -42,10 +43,36 @@ typedef struct memoria_secundaria {
 } MS;
 
 /* funções de operação */
+// amanda
+void imprime_tabela_paginas(TP *tab_pags){
+
+    printf("=======================\n");
+    int i = 0;
+    TP *aux = tab_pags;
+    while(aux != NULL){
+        printf("Lacuna %d: \n", i);
+        printf("Bit de presença na memória principal: %d \n", tab_pags->bit_p);
+        printf("Bit de modificação da página: %d \n", tab_pags->bit_m);
+        printf("Endereço do quadro na memória principal: %d \n", tab_pags->end_quadro);
+        printf("-------------------------\n");
+        aux = aux->prox;
+    }
+}
+
+// amanda
+void imprime_estado_processo(P *processo){
+    printf("Dados do processo %s: \n", processo->identificador);
+    printf("----------------------\n");
+    printf("Estado do processo: %s \n", processo->estado_processo);
+    printf("Tamanho do processo: %d \n", processo->tam_imagem);
+    printf("Tabela de páginas associada: \n");
+    imprime_tabela_paginas(processo->tab_paginas);
+    printf("\n");
+}
 
 // amanda
 void configuracoes(int *tam_mf, int *tam_ms, int *tam_qm,
- int *tam_end_logico, MP *m_principal, PG pag) {
+ int *tam_end_logico, PG pag) {
 
     *tam_qm = 0;
     *tam_mf = 0;
@@ -69,19 +96,14 @@ void configuracoes(int *tam_mf, int *tam_ms, int *tam_qm,
 
     printf("4. Tamanho em bits do endereço lógico: \n");
     scanf("%d", tam_end_logico);
-    *tam_end_logico = pow(2, *tam_end_logico-3); // o -3 é para converter em bytes
-    //Endereço Lógico composto por numeros de paginas + tamanho da pagina
-    //Com tamanho da pagina do item 4 e mais o tamanho do endereço logico temos o numero de paginas.
+    *tam_end_logico = pow(2, *tam_end_logico-3); // o que é isso?
 
-    // guardando as informações nas estruturas
-    //m_principal->num_quadros = *tam_qm; numero de quadros é diferente do tamanho do quadro
-    m_principal->tam_mp = *tam_mf;
     pag.tam_pagina = *tam_qm;
     pag.tam_endereco_virtual = *tam_end_logico;
 }
 
 // amanda
-void flags(char flag_processo, char *nome_processo, int tam_processo, MS *m_secundaria){
+void flags(char flag_processo, char *nome_processo, int tam_processo, MS *m_secundaria, MP *m_principal){
 
     P *proc;
 
@@ -89,10 +111,9 @@ void flags(char flag_processo, char *nome_processo, int tam_processo, MS *m_secu
     proc = aloca_processo(m_secundaria, nome_processo);
 
     if(flag_processo == 'P'){
-        //estado executando
-        impressao_p(proc); // antes da alteração 
+        imprime_estado_processo(proc); // antes da alteração
         instrucao_cpu();
-        impressao_p(proc); // depois da alteração
+        imprime_estado_processo(proc); // depois da alteração
     }
     if(flag_processo ==  'I'){
         //estado bloqueado a espera de E/S
@@ -125,12 +146,13 @@ void flags(char flag_processo, char *nome_processo, int tam_processo, MS *m_secu
         printf("Opção inválida. \n");
     }
 }
+/* operações das estruturas de dados - lru */
+
 
 /* operações das estruturas de dados - memória secundária */
+
 // amanda
 MS *inicializa_ms(int tamanho){
-
-    MS* novo = (MS *)malloc(sizeof(MS));
 
     novo->tam_ms = tamanho;
     novo->processos = NULL;
@@ -171,7 +193,7 @@ P *aloca_processo(MS *m_secundaria, char *nome_processo, int tam_processo){
     P *aux;
 
     // checa se o processo já esta alocado na memória
-    aux = busca_processo_ms(m_secundaria, nome_processo);
+    aux = busca_processo_ms(m_secundaria, nome_processo); // vai ter q trocar
     
     // se não estiver, aloca o processo na memória
     if(!aux){
@@ -248,29 +270,18 @@ TP *preenche_fila(MP *m_principal, P *processo, PG pagina){
     return aux;
 }
 
-
 /* operações das estruturas de dados - memória principal */
 // amanda
-MP *inicializa_mp(int tamanho){
+MP *inicializa_mp(int tam_mf, int tam_qm){
 
     MP *novo;
-    novo->tam_mp = tamanho;
-    novo->fila_paginas = NULL;
-    novo->num_quadros = 0;
+    novo->tam_mp = tam_mf;
+    novo->num_quadros = tam_mf / tam_qm;
+
+    novo->vetor_paginas = (int*)malloc(sizeof(int) * novo->num_quadros);
+    if(!novo->vetor_paginas) exit(1);
+
+    novo->fila_lru = NULL;
 
     return novo;
 }
-
-// void inicializa_memoria_principal(MP *memoria_principal) {
-//     int num_quadros = memoria_principal->num_quadros;
-//     memoria_principal->fila_paginas->n = memoria_principal->fila_paginas->ini = 0;
-//     memoria_principal->fila_paginas->tam = num_quadros;
-//     memoria_principal->fila_paginas->vet = (PG **)malloc(sizeof(*PG) * num_quadros);
-
-//     for (int i = 0; i < num_quadros; i++) {
-//         TP *pagina = &(memoria_principal->fila_paginas->vet[i]);
-//         pagina->bit_p = 0;
-//         pagina->bit_m = 0;
-//         pagina->end_quadro = i;
-//     }
-// }

@@ -162,7 +162,7 @@ void impressao_tp(TP *tabela_proc, int tam_tabela){
 }
 
 // amanda
-void impressao_p(P *proc){ //precisa disso?
+void impressao_p(P *proc){ 
 
     printf("Dados do processo %s: \n", proc->identificador);
     printf("----------------------\n");
