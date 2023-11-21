@@ -1,0 +1,34 @@
+// aqui resolve o problema da memoria secundaria
+lista de processos na memoria secundaria - lista encadeada 
+(fazer a estrutura)
+
+//aqui resolve o problema da memoria principal 
+lista de paginas na memoria principal - fila
+somar o tam do processo a uma variavel
+
+//aqui resolve o problema do lru
+se a soma for passar do tam da memoria principal, entao retira o primeiro
+elemento da fila e coloca a pagina nova no final 
+
+// aqui resolve o swapper
+swapper - trocar estado do processo para bloqueado
+passa pra proxima instrucao 
+ai ve qual eh 
+se for de entrada e saida no processo bloqueado resolve, e passa pra pronto 
+ai qnd o proximo for executar o doidao bloqueado ja é resolvido 
+
+// aqui resolve a tabela de paginas
+primeiro tem que quebrar o processo e quebrar ele em paginas, mas p isso temos q saber o tamanho das paginas
+as paginas sao configuraveis, entao a entrada quem vai decidir é o usuario 
+a partir dai podemos usar uma estrutura de hash para quebrar o processo em paginas e guardar os endereços
+esses endereços vao ser guardados na tabela de paginas
+a estrutura de hash ta no discord, so alterar e colocar no codigo
+
+OPERACAO DA TABELA DE PAGS: ESSE ENDEREÇO QUE VAI PRA MEMORIA PRINCIPAL
+COMO O TAMANHO DA TABELA DE PAGS EH FIXO, VAMOS SOMAR ATE ATINGIR O TAM DA MP
+SE ATINGIR, ENT TROCA
+
+favor seguir a organizacao que eu deixei no arquivo pra ficar mais facil
+alem disso, coloquem os nomes de voces nas funcoes que voces forem fazendo 
+
+ultima coisa e opcional: saida toda num arquivo 

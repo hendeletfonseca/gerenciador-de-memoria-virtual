@@ -8,7 +8,7 @@
 
 /* estrutura das variáveis*/
 
-typedef struct pagina { //precisa mesmo ser ponteiro isso aqui?
+typedef struct pagina {
     int *tam_pagina; 
     int *tam_endereco_virtual;
     int *endereco_virtual; // endereco da pag na memoria virtual
@@ -16,15 +16,12 @@ typedef struct pagina { //precisa mesmo ser ponteiro isso aqui?
 } PG;
 
 typedef struct tabela_paginas {
-    //PG *pagina; -----> endereço virtual 
     int bit_p; // bit de presenca
     int bit_m; // bit de modificacao
     int end_quadro; // endereco da pagina na memoria principal -- fisico
 } TP;
 
 typedef struct processo {
-    // char identificador[2];
-    // char estado_processo[10];
     char *identificador; // nome do processo lido no arquivo 
     char *estado_processo; // informa em qual estado o processo esta: novo, pronto, bloqueado, executando, finalizado
     int *tam_imagem; // tamanho do processo
@@ -62,7 +59,7 @@ void configuracoes(int *tam_mf, int *tam_ms, int *tam_pag, int *tam_qm,
     while(*tam_qm <= 0){
         scanf("%d", tam_qm);
     }
-    tam_qm*=1024;
+    tam_qm *= 1024;
 
     printf("2. Tamanho da memoria fisica (Deve ser multiplo do tamanho do quadro: %d): \n", *tam_qm);
     // do {                                 mesma coisa do anterior -Bossan
@@ -86,7 +83,7 @@ void configuracoes(int *tam_mf, int *tam_ms, int *tam_pag, int *tam_qm,
     while(tam_pag <= 0){
         scanf("%d", tam_pag);
     }
-    tam_pag*=1024;
+    tam_pag *= 1024;
 
     //printf("5. Tamanho do endereco logico: \n");
     printf("5. Tamanho em bits do endereço lógico: \n");
@@ -105,7 +102,7 @@ void configuracoes(int *tam_mf, int *tam_ms, int *tam_pag, int *tam_qm,
 
 // amanda
 P *inicia_processo(MS *m_secundaria, char *nome_processo, int tam_processo){
-    //quando inicado entao o processo vai direto pra mem secundaria ent? nao a mp?
+
     P *aux = NULL;
     bool res = false;
 
@@ -154,9 +151,12 @@ void impressao_tp(TP *tabela_proc, int tam_tabela){
     printf("=======================\n");
     for(int i = 0; i < tam_tabela; i++){
         printf("Lacuna %d: \n", i);
-        printf("Bit de presença na memória principal: %d \n", tabela_proc->bit_p);
-        printf("Bit de modificação da página: %d \n", tabela_proc->bit_m);
-        printf("Endereço do quadro na memória principal: %d \n", tabela_proc->end_quadro);
+        // printf("Bit de presença na memória principal: %d \n", tabela_proc->bit_p);
+        // printf("Bit de modificação da página: %d \n", tabela_proc->bit_m);
+        // printf("Endereço do quadro na memória principal: %d \n", tabela_proc->end_quadro);
+        printf("Bit de presença na memória principal: %d \n", tabela_proc[i]->bit_p);
+        printf("Bit de modificação da página: %d \n", tabela_proc[i]->bit_m);
+        printf("Endereço do quadro na memória principal: %d \n", tabela_proc[i]->end_quadro);
     }
     printf("=======================\n");
 }
@@ -220,6 +220,7 @@ void ver_mp(MP *memoria_principal){
         printf("-----------------------\n");
     }
 }
+
 void ver_ms(MS *memoria_secundaria){
     int tam_ms = memoria_secundaria->tam_ms;
     P *processos = memoria_secundaria->processos;
@@ -238,6 +239,7 @@ void ver_ms(MS *memoria_secundaria){
         atual = atual->proximo;
     }
 }
+
 void halt(P *proc, char *acao_processo, int *endereco){ 
 
     /*
@@ -268,7 +270,6 @@ void flags(char *flag_processo, char *nome_processo, int tam_processo, MS *m_sec
     }
     if(res) proc = m_secundaria->processos;
     else proc = NULL;
-
 
     // atualizacoes do processo sao na funcao de flag
 
@@ -301,7 +302,7 @@ void flags(char *flag_processo, char *nome_processo, int tam_processo, MS *m_sec
     }
     if(flag_processo == 'W'){
         //estado esperando estar na mp --> pronto --> executando
-        impressao_p();
+        impressao_p(proc);
         escrita();
         impressao_p(proc);
     }
