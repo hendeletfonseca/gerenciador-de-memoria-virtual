@@ -1,4 +1,4 @@
-#include "funcoes_2.c"
+#include "funcoes.c"
 
 int main(void){
 

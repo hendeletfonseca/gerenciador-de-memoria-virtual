@@ -1,33 +1,40 @@
-// aqui resolve o problema da memoria secundaria
-lista de processos na memoria secundaria - lista encadeada 
-(fazer a estrutura)
-
-//aqui resolve o problema da memoria principal 
-lista de paginas na memoria principal - lista encadeada/hash
-somar o tam do processo a uma variavel
-
-//aqui resolve o problema do lru
-se a soma for passar do tam da memoria principal, entao retira o primeiro
-elemento da fila, subtrai o tam do elemento e coloca a pagina nova no final, adicionando dnvo tam.
-
-
-// aqui resolve o swapper
+//aqui resolve o swapper 
 swapper - trocar estado do processo para bloqueado
 passa pra proxima instrucao 
 ai ve qual eh 
 se for de entrada e saida no processo bloqueado resolve, e passa pra pronto 
 ai qnd o proximo for executar o doidao bloqueado ja é resolvido 
 
+//resolver gravamento de modificacao de pag na MP
+quando for aplicar a polica de LRU e uma pag for sair da memoria principal, é necessário verificar 
+se ela foi modificada. se tiver sido é bom printar na tela q tivemos que atualizar a pag na MS.
+
+//ADD fila de prontos e bloqueados
+
+//ADD prints por todo o código pra ficar bem claro o que está acontecendo!!!!!!!!!!!
+
+//aqui resolve o problema da memoria secundaria
+lista de processos na memoria secundaria - lista encadeada 
+(fazer a estrutura) -- FEITO
+
+//aqui resolve o problema da memoria principal 
+lista de paginas na memoria principal - lista encadeada/hash -- FEITO
+somar o tam do processo a uma variavel -- desistimos?
+
+//aqui resolve o problema do lru
+se a soma for passar do tam da memoria principal, entao retira o primeiro
+elemento da fila, subtrai o tam do elemento e coloca a pagina nova no final, adicionando dnvo tam. -- FEITO
+
 // aqui resolve a tabela de paginas
 primeiro tem que quebrar o processo e quebrar ele em paginas, mas p isso temos q saber o tamanho das paginas
-as paginas sao configuraveis, entao a entrada quem vai decidir é o usuario 
+as paginas sao configuraveis, entao a entrada quem vai decidir é o usuario -- FEITO
 a partir dai podemos usar uma estrutura de hash para quebrar o processo em paginas e guardar os endereços
 esses endereços vao ser guardados na tabela de paginas
 a estrutura de hash ta no discord, so alterar e colocar no codigo
 
 //enderecos
 as configuracoes dao o tamanho do end logico em bits, daié possivel calcularo offset e posteriormente 
-o end fisico, pra gente mostrar na "interface"
+o end fisico, pra gente mostrar na "interface" -- FEITO
 
 OPERACAO DA TABELA DE PAGS: ESSE ENDEREÇO QUE VAI PRA MEMORIA PRINCIPAL
 COMO O TAMANHO DA TABELA DE PAGS EH FIXO, VAMOS SOMAR ATE ATINGIR O TAM DA MP
