@@ -16,7 +16,6 @@ typedef struct tabela_paginas {
     int bit_p;
     int bit_m;
     int end_quadro; // endereço na memoria principal
-    int tam_preenchido; // para saber se ja ultrapassou o tam da memoria principal ou nao
     //achoq nao precisa de tam preenchido  kskskssksk
     struct tabela_paginas *prox; // estamos tratando como se fosse uma lista encadeada... 
 } TP;
@@ -56,7 +55,6 @@ P *aloca_processo(MS *m_secundaria, char *nome_processo, int tam_processo);
 TP *inicia_tabela_paginas(P *processo, int tam_processo);
 MP *inicializa_mp(int tam_mf, int tam_qm);
 MS *inicializa_ms(int tamanho);
-TP *inicia_tabela_paginas(P *processo, int tam_processo);
 
 int busca_pagina_referenciada(MP *m_principal, int end); //qual a diferenca pra minha e oq faz? (gabi)
 void busca_pagina(P *processo, int end_logico); //(a minha) --gabi sksksks

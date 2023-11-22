@@ -61,7 +61,7 @@ void flags(char flag_processo, char *nome_processo, int tam_processo, MS *m_secu
         leitura();
         impressao_p(proc);
     }
-    if(flag_processo == 'W'){
+    if(flag_processo == 'W'){ 
         //estado esperando estar na mp --> pronto --> executando
         impressao_p(proc);
         escrita();
@@ -144,6 +144,31 @@ MS *inicializa_ms(int tamanho){
 
 /* operações das estruturas de dados - tabela de páginas */
 
+// acho que ta pronto, pf confiram @gabi @amanda @raio
+void inicia_tabela_de_paginas_proc(P *processo, int size_pag){  
+    // todo: ver se vai dar problema quando tiver resto
+    // processo->tab_paginas deve ser null
+    int qtd_pags = processo->tam_imagem / size_pag;
+    TP *old;
+    TP *current;
+    processo->tab_paginas = (TP*)malloc(sizeof(TP));
+    processo->tab_paginas->bit_m = 0;
+    processo->tab_paginas->bit_p = 0;
+    processo->tab_paginas->end_quadro = 0;
+    processo->tab_paginas->prox = NULL;
+    old = processo->tab_paginas;
+
+    for (int i = 1; i < qtd_pags; i++){
+        current = (TP*)malloc(sizeof(TP));
+        current->bit_m = 0;
+        current->bit_p = 0;
+        current->end_quadro = (i) * size_pag;
+        current->prox = NULL;
+        old->prox = current;
+        old = current;
+    }
+}
+
 TP *inicia_tabela_paginas(P *processo, int tam_processo){
     // RAIO
 }
@@ -159,13 +184,14 @@ int busca_pagina_referenciada(MP *m_principal, int end){
 
 /* operações das estruturas de dados - processo */
 // gabi
-void busca_pagina(P *processo, int end_logico){  //pra implementar instrucao e tals
+void busca_pagina(P *processo, int end_logico,int qtd_bits_endereco_logico){  //pra implementar instrucao e tals
 //em vez de retornar valor, pode só printar as saídas. importante calcular end_fisico pra isso
 
     // encontra a pag, ve na tp se ta em mp, se sim otimo e se nao carrega_pag_mp()
     TP * tab_paginas = processo->tabela_paginas;
 
     //usar conversao do hendel pra encontrar aqui o numero da pagina igualar a k;
+    int k = n_pag(int endereco_logico, int page_size, int qtd_bits_endereco_logico);
     int i = 0;
     while (while i < k){
         tab_paginas = tab_paginas->prox;
@@ -176,10 +202,9 @@ void busca_pagina(P *processo, int end_logico){  //pra implementar instrucao e t
         //calculo do hendel pra achar o numero do quadro q a pag ta pra retornar valor se quiser;
     }
     else{
-        carrega_pag_mp();
+        carrega_pag_mp(); //cade os parametros? da função raio aqui //calma fi nem decidi como vai ser gabi aqui
     }
 }
-
 //gabi tem q mexer aq
 void carrega_pag_mp(P* processo, PG* pagina, MP*m_principal){ 
 
@@ -336,6 +361,32 @@ TP *preenche_fila(MP *m_principal, P *processo, PG pagina){
 
 // hendel
 // acho justo quebrar em funcoes menores (gabi faz)
+
+int n_pag (int endereco_logico, int page_size, int qtd_bits_endereco_logico){
+    int qtd_bits_off_set = casas_decimais_em_binario(page_size);
+    int qtd_bits_num_pag = qtd_bits_endereco_logico - qtd_bits_off_set;
+    int bin_end_log[qtd_bits_endereco_logico];
+    binario(endereco_logico, bin_end_log, qtd_bits_endereco_logico);
+    
+    // adiciona os bits do off set e da pag
+    int bits_off_set[qtd_bits_off_set];
+    int bits_num_pag[qtd_bits_num_pag];
+    int pos = 0;
+    while (pos < qtd_bits_num_pag) {
+        bits_num_pag[pos] = bin_end_log[pos];
+        pos++;
+    }
+    int i = 0;
+    while (i < qtd_bits_off_set) {
+        bits_off_set[i] = bin_end_log[pos];
+        i++;
+        pos++;
+    }
+
+    int num_pag = decimal(bits_num_pag, qtd_bits_num_pag);
+    return num_pag;
+}
+
 int MMU (int endereco_logico, int page_size, int qtd_bits_endereco_logico, TP *tabela) {
     int qtd_bits_off_set = casas_decimais_em_binario(page_size);
     int qtd_bits_num_pag = qtd_bits_endereco_logico - qtd_bits_off_set;
@@ -395,6 +446,34 @@ int decimal(int *binario, int tamanho) {
 }
 
 /* operação de término - processo */
+void halt_MP(MP *mp, P *proc){
+    TP *pag = proc->tab_paginas;
+    while(pag!=NULL){
+        int num_pag = pag->end_quadro;
+        mp->tabela_paginas[num_pag];
+        TP* temp = pag;
+        pag= pag->prox;
+        free(temp);
+        
+//Duvida Raio de como fazer?
+    }
+}
+void halt_MS(MS *ms, P *proc){
+    //nao sei como implementar
+    P *temp = ms->processos
+    P *aux = temp->prox
+    while(temp!=NULL){
+        if(strcmp(aux->identicador, proc->identificador)==0){
+                temp->prox = aux->prox;
+                free(aux);
+                break;
+        }
+        else{
+            aux = aux->prox;
+            temp = temp->prox; 
+        }
+    }
+}
 //gabi
 void halt(P *proc, MP *mp, MS *ms ){ 
     /*
@@ -408,9 +487,12 @@ void halt(P *proc, MP *mp, MS *ms ){
     se sim, remove da memoria principal
     remove da tabela de paginas
     */
-    for(int i=0;i<mp->num_quadros; i++){
-        mp->vetor_paginas[i]->processo_associado = *proc
-    }
+    halt_MP(mp, proc);
+    halt_MS(ms, proc);
+    free(proc->identificador);
+    free(proc->estado_processo);
+    free(proc->tam_imagem);
+    free(proc); 
 }
 
 /* impressões */
