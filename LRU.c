@@ -17,10 +17,10 @@ int MMU(){ //componente do hardware que converte o endereco logico em fisico
 }
 
 DUVIDAS:
-- bit de presenca ta na pagina? se tiver vai facilitar mt pra ver se a pag precisa ser carregada na mp 
-ou se ja esta la. ou ele ta na tp
+//- bit de presenca ta na pagina? se tiver vai facilitar mt pra ver se a pag precisa ser carregada na mp 
+//ou se ja esta la. ou ele ta na tp
 - como implementar os requisitos de E/S?
-- vetor dinamico ou lista encadeada na fila_mp? 
+//- vetor dinamico ou lista encadeada na fila_mp? 
 
 
 void carrega_pag_mp(P* processo, PG* pagina, MP*m_principal){ //mp é uma fila!!!
@@ -29,17 +29,15 @@ void carrega_pag_mp(P* processo, PG* pagina, MP*m_principal){ //mp é uma fila!!
 
     if (!cheia(fila_mp)){ //Caso 1: MP nao esta cheia -- pagina é alocada
         insere(fila_mp, pagina) 
-        printf("A página da imagem do processo X foi carregada para a MP com sucesso\n") //substituir X
-        //estado do processo passa a ser pronto
-        processo->estado = 'Pronto'
-        printf("O processo passou para o estado 'Pronto'\n")
     }
     else{ //Caso 2: A MP esta cheia e aplicaremos a política de substituicao LRU
         printf("A MP está cheia, useremos a política de substituição LRU para carregar a imagem na MP")
         retira(fila_mp);
         insere(fila_mp, pagina);
-        printf("A página da imagem do processo X foi carregada para a MP com sucesso\n")
-        processo->estado = 'Pronto'
-        printf("O processo passou para o estado 'Pronto'\n")
     }
+
+    printf("A página da imagem do processo X foi carregada para a MP com sucesso\n") //substituir X
+    //estado do processo passa a ser pronto
+    processo->estado = 'Pronto'
+    printf("O processo passou para o estado 'Pronto'\n")
 }
