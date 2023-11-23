@@ -38,7 +38,7 @@ int main(void){
     número-do-processo  P  endereço-lógico
     número-do-processo  W  endereço-lógico  valor
     */
-    while(fscanf(fila_processos, "%s %i %d", nome_processo, acao, &tam_processo)){
+    while(fscanf(fila_processos, "%s %c %d", nome_processo, &acao, &tam_processo)){
         flags(acao, nome_processo, tam_processo, mem_secundaria, mem_principal);
     }
     

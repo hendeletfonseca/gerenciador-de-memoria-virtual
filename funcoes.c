@@ -1,6 +1,114 @@
-#include "funcoes.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <locale.h>
+#include <string.h>
+#include <math.h>
 
-/* funções de operação */
+typedef struct tabela_paginas {
+    int bit_p;
+    int bit_m;
+    int end_quadro; // endereço na memoria principal
+    //achoq nao precisa de tam preenchido  kskskssksk
+    struct tabela_paginas *prox; // estamos tratando como se fosse uma lista encadeada... 
+} TP;
+
+typedef struct least_recently_used {
+    int end;
+    struct least_recently_used *prox;
+} LRU;
+typedef struct processo {
+    char *identificador; // nome do processo lido no arquivo 
+    char *estado_processo; // informa em qual estado o processo esta: novo, pronto, bloqueado, executando, finalizado
+    int *tam_imagem; // tamanho do processo
+    TP *tab_paginas; // lista encadeada, vamos usar esse TP?
+    struct processo *prox; // pois na ms tem uma lista de processos...
+} P;
+
+typedef struct pagina {
+    int *tam_pagina; 
+    int *tam_endereco_virtual;
+    int *endereco_virtual; // endereco da pag na memoria virtual
+    P *processo_associado; // processo a qual a pg esta associada
+} PG;
+typedef struct memoria_principal {
+    int tam_mp;
+    int num_quadros;
+    int *pags_refs;
+    LRU *fila_lru; //na pratica isso aqui nao existe :))))
+    TP *tabela_paginas;
+} MP;
+
+typedef struct memoria_secundaria {
+    int tam_ms;
+    P *processos;
+} MS;
+
+int casas_decimais_em_binario(int n) {
+    int tamanho_binario = 0;
+    while (n >= 1) {
+        n >>= 1;
+        tamanho_binario++;
+    }
+    return tamanho_binario;
+}
+
+// converte de decimal p binario
+// n -> valor a ser convertido, *binario é o array int
+void binario(int n, int *binario, int tamanho) {
+    int i;
+    for (i = tamanho - 1; i >= 0; i--) {
+        binario[i] = n & 1;
+        n >>= 1;
+    }
+}
+
+int PAGE_SIZE = 0;
+// amanda
+P *busca_processo_ms(MS *m_secundaria, char *nome_processo){
+
+    P *aux = m_secundaria->processos;
+    while(aux != NULL && strcmp(aux->identificador, nome_processo) != 0){
+        aux = aux->prox;
+    }
+    return aux;
+}
+
+// amanda
+
+
+// amanda
+LRU *busca_fila(LRU *fila, int end){
+    LRU *aux = fila;
+    while(aux != NULL){
+        if(aux->end == end) break;
+        aux = aux->prox;
+    }
+    return aux;
+}
+void inicia_tabela_de_paginas_proc(P *processo, int size_pag){  
+    // todo: ver se vai dar problema quando tiver resto
+    // processo->tab_paginas deve ser null
+    int qtd_pags = *(processo->tam_imagem) / size_pag;
+    TP *old;
+    TP *current;
+    processo->tab_paginas = (TP*)malloc(sizeof(TP));
+    processo->tab_paginas->bit_m = 0;
+    processo->tab_paginas->bit_p = 0;
+    processo->tab_paginas->end_quadro = 0;
+    processo->tab_paginas->prox = NULL;
+    old = processo->tab_paginas;
+
+    for (int i = 1; i < qtd_pags; i++){
+        current = (TP*)malloc(sizeof(TP));
+        current->bit_m = 0;
+        current->bit_p = 0;
+        current->end_quadro = (i) * size_pag;
+        current->prox = NULL;
+        old->prox = current;
+        old = current;
+    }
+}
 P *aloca_processo(MS *m_secundaria, char *nome_processo, int tam_processo){
 
     P *aux;
@@ -14,8 +122,8 @@ P *aloca_processo(MS *m_secundaria, char *nome_processo, int tam_processo){
         P *novo = (P*)malloc(sizeof(P));
         strcpy(novo->identificador, nome_processo);
         strcpy(novo->estado_processo, "Novo");
-        novo->tam_imagem = tam_processo;
-        novo->tab_paginas = inicia_tabela_paginas(novo, tam_processo);
+        novo->tam_imagem = &tam_processo;
+        inicia_tabela_de_paginas_proc(novo, tam_processo);
         novo->prox = m_secundaria->processos;
         m_secundaria->processos = novo;
 
@@ -23,13 +131,125 @@ P *aloca_processo(MS *m_secundaria, char *nome_processo, int tam_processo){
     }   
     return aux;
 }
+// raian
+void halt_MP(MP *mp, P *proc){
+
+  /*  TP *pag = proc->tab_paginas;
+
+    while(pag!=NULL){  //verifica se pag ta na mp pra exclusao
+        
+        if (pag->bit_p == 1){
+
+            int end = pag->end_quadro;
+            //descobrir numero do quadro!
+            //busca na mp o endereco
+            //exclui a pagina
+        }
+
+        
+    }*/
+
+    TP *pag = proc->tab_paginas;
+
+    while(pag!= NULL){ 
+        
+        TP * linha = pag;
+
+        free(linha);
+        pag = pag->prox;   
+    }
+    free(proc->tab_paginas); //exclui tabela de pag do processo da mp
+}
+
+void halt_MS(MS *ms, P *proc){
+
+    P *temp = ms->processos;
+    P *aux = temp->prox;
+    while(temp!=NULL){ 
+        if(strcmp(aux->identificador, proc->identificador)==0){
+                temp->prox = aux->prox;
+                free(aux);
+                break;
+        }
+        else{
+            aux = aux->prox;
+            temp = temp->prox; 
+        }
+    }
+}
+
+// raian
+void halt(P *proc, MP *mp, MS *ms ){ 
+    
+    halt_MP(mp, proc); //exclui as pags q estao na mp
+    halt_MS(ms, proc); //exclui o processo da ms
+    
+    free(proc->identificador);
+    free(proc->estado_processo);
+    free(proc->tam_imagem);
+    free(proc); 
+}
 
 // amanda
-void configuracoes(int *tam_mf, int *tam_ms, int *tam_qm, int *tam_end_logico, PG pag) {
+LRU *insere_fila_parte2(LRU *fila, int end){
+    // se o elemento não está na fila, entao vamos inseri-lo
+    if(!busca_fila(fila, end)){
+        LRU *novo;
+
+        novo = (LRU*)malloc(sizeof(LRU));
+        novo->end = end;
+
+        if(!fila) return novo;
+        LRU *aux = fila;
+        while(aux->prox != NULL){
+            aux = aux->prox;
+        }
+        aux->prox = novo;
+        novo->prox = NULL;
+        return fila;
+    }
+    // se o elemento está na fila, entao buscamos e inserimos no final
+    else {
+        LRU *ref = NULL, *aux = fila;
+
+        while(aux->prox != NULL){
+            if(aux->end == end){
+                ref = aux;
+            }
+            aux = aux->prox;
+        }
+        aux->prox = ref;
+        ref->prox = NULL;
+    }
+    return fila;
+}
+int LRU_cheia(LRU *fila, int tam_max){
+    int cheia = 1;
+    LRU *aux = fila;
+    for(int c = 0; c<tam_max; c++){
+        if(aux == NULL){
+            cheia = 0;
+            break;
+        }
+        aux = aux->prox;
+    }
+    return cheia;
+}
+
+LRU *insere_fila(LRU *fila, int end, int tam_max){
+    LRU *novo = NULL;
+    int cheia = 1;
+    if(!LRU_cheia(fila, tam_max)){
+        novo = insere_fila_parte2(fila, end);
+    }
+    return novo;
+}
+// amanda
+void configuracoes(int *tam_mf, int *tam_ms, int *tam_qm, int *tam_end_logico, PG pag){
 
     *tam_qm = 0;
     *tam_mf = 0;
-
+    int tampag=0;
     printf("Digite o tamanho desejado para cada uma das opcoes abaixo \n");
     
     printf("1. Tamanho do quadro de memoria (valor inteiro em KB): \n"); //criar opcao pra ser MB ou GB
@@ -40,7 +260,7 @@ void configuracoes(int *tam_mf, int *tam_ms, int *tam_qm, int *tam_end_logico, P
 
     printf("2. Tamanho da memoria fisica (Deve ser multiplo do tamanho do quadro: %d): \n", *tam_qm);
     do {
-        if(*tam_mf) printf("Valor incorreto, deve ser multiplo de %d!", *tam_qm)
+        if(*tam_mf) printf("Valor incorreto, deve ser multiplo de %d!", *tam_qm);
         scanf("%d", tam_mf);
     } while (*tam_mf % (*tam_qm) != 0);
     
@@ -50,24 +270,33 @@ void configuracoes(int *tam_mf, int *tam_ms, int *tam_qm, int *tam_end_logico, P
     printf("4. Tamanho em bits do endereço lógico: \n");
     scanf("%d", tam_end_logico);
     *tam_end_logico = pow(2, *tam_end_logico-3); // o que é isso?
-
+    PAGE_SIZE = tampag;
     pag.tam_pagina = tam_qm;
     pag.tam_endereco_virtual = tam_end_logico;
 }
-void instrucao_cpu(){
+void instrucao_cpu (){
     printf("\nInstrução sendo executada\n");
 }
-void instrucao_es(){
+void instrucao_es (){
     printf("\nInterromper, ir para bloqueado\n");
 }
-void impressao_p(P *proc){
+void impressao_p (P *proc){
     printf("\nImprimi processo\n");
 }
-void leitura(){
+void leitura (){
 	printf("\nLeitura\n");
 }
-void escrita(){
+void escrita (){
 	printf("\nEscrita\n");
+}
+void imprime_estado_processo(P *processo){
+    printf("Dados do processo %s: \n", processo->identificador);
+    printf("----------------------\n");
+    printf("Estado do processo: %s \n", processo->estado_processo);
+    printf("Tamanho do processo: %d \n", processo->tam_imagem);
+    printf("Tabela de páginas associada: \n");
+    imprime_tabela_paginas(processo->tab_paginas);
+    printf("\n");
 }
 // amanda
 void flags(char flag_processo, char *nome_processo, int tam_processo, MS *m_secundaria, MP *m_principal){
@@ -75,7 +304,7 @@ void flags(char flag_processo, char *nome_processo, int tam_processo, MS *m_secu
     P *proc;
 
     // aqui aloca o processo se ele não existir, ou busca na memória caso já esteja lá
-    proc = aloca_processo(m_secundaria, nome_processo);
+    proc = aloca_processo(m_secundaria, nome_processo, tam_processo);
 
     if(flag_processo == 'P'){
         imprime_estado_processo(proc); // antes da alteração
@@ -110,7 +339,7 @@ void flags(char flag_processo, char *nome_processo, int tam_processo, MS *m_secu
     if(flag_processo == 'T'){
         //estado final?? :)
         impressao_p(proc);
-        halt();
+        //halt();
         impressao_p(proc);
     }
     else {
@@ -166,17 +395,17 @@ void insere_pagina(MP *m_principal, P *processo, int end){
     // aqui insere a tabela de pags do processo à lista de tabela de pags
     // trocar a estrutura
     TP *novo;
-    novo = (*TP)malloc(sizeof(TP) * );// o que é isso???
+    //novo = (*TP)malloc(sizeof(TP) * );// o que é isso???
 
     // aqui insere na fila de paginas ja tratando o caso da pagina ja estar referenciada
-    m_principal->fila_lru = insere_fila(m_principal->fila_lru, end);
+    m_principal->fila_lru = insere_fila(m_principal->fila_lru, end, m_principal->tam_mp);
 
 }
 
 /* operações das estruturas de dados - memória secundária */
 // amanda
 MS *inicializa_ms(int tamanho){
-
+    MS *novo = (MS*)malloc(sizeof(novo));
     novo->tam_ms = tamanho;
     novo->processos = NULL;
 
@@ -186,40 +415,42 @@ MS *inicializa_ms(int tamanho){
 /* operações das estruturas de dados - tabela de páginas */
 
 // acho que ta pronto, pf confiram @gabi @amanda @raio
-void inicia_tabela_de_paginas_proc(P *processo, int size_pag){  
-    // todo: ver se vai dar problema quando tiver resto
-    // processo->tab_paginas deve ser null
-    int qtd_pags = processo->tam_imagem / size_pag;
-    TP *old;
-    TP *current;
-    processo->tab_paginas = (TP*)malloc(sizeof(TP));
-    processo->tab_paginas->bit_m = 0;
-    processo->tab_paginas->bit_p = 0;
-    processo->tab_paginas->end_quadro = 0;
-    processo->tab_paginas->prox = NULL;
-    old = processo->tab_paginas;
 
-    for (int i = 1; i < qtd_pags; i++){
-        current = (TP*)malloc(sizeof(TP));
-        current->bit_m = 0;
-        current->bit_p = 0;
-        current->end_quadro = (i) * size_pag;
-        current->prox = NULL;
-        old->prox = current;
-        old = current;
-    }
-}
 
 
 /* operações das estruturas de dados - processo */
 // gabi
-void busca_pagina(P *processo,  int end_logico, int qtd_bits_endereco_logico){  //pra implementar instrucao e tals
+int n_pag (int endereco_logico, int page_size, int qtd_bits_endereco_logico){
+    int qtd_bits_off_set = casas_decimais_em_binario(page_size);
+    int qtd_bits_num_pag = qtd_bits_endereco_logico - qtd_bits_off_set;
+    int bin_end_log[qtd_bits_endereco_logico];
+    binario(endereco_logico, bin_end_log, qtd_bits_endereco_logico);
+    
+    // adiciona os bits do off set e da pag
+    int bits_off_set[qtd_bits_off_set];
+    int bits_num_pag[qtd_bits_num_pag];
+    int pos = 0;
+    while (pos < qtd_bits_num_pag) {
+        bits_num_pag[pos] = bin_end_log[pos];
+        pos++;
+    }
+    int i = 0;
+    while (i < qtd_bits_off_set) {
+        bits_off_set[i] = bin_end_log[pos];
+        i++;
+        pos++;
+    }
+
+    int num_pag = decimal(bits_num_pag, qtd_bits_num_pag);
+    return num_pag;
+}
+void busca_pagina(P *processo, int end_logico, int qtd_bits_endereco_logico){  //pra implementar instrucao e tals
 
     // encontra a pag, ve na tp se ta em mp, se sim otimo e se nao carrega_pag_mp()
-    TP * tab_paginas = processo->tabela_paginas;
+    TP * tab_paginas = processo->tab_paginas;
 
     //usar conversao do hendel pra encontrar aqui o numero da pagina igualar a k;
-    int k = n_pag(int end_logico, int page_size, int qtd_bits_endereco_logico);
+    int k = n_pag(end_logico,PAGE_SIZE, qtd_bits_endereco_logico);
     int i = 0;
     while (i < k){
         tab_paginas = tab_paginas->prox;
@@ -227,39 +458,14 @@ void busca_pagina(P *processo,  int end_logico, int qtd_bits_endereco_logico){  
     }
 
     if (tab_paginas->bit_p == 1){
-        printf("Página buscada já está da MP"); //pode fazer instrucao, escrita e leitura;
+        printf("Página buscada já está na MP"); //pode fazer instrucao, escrita e leitura;
 
     }
     else{
         //achar a pagina na ms pra passar como parametro nessa proxima funcao
-        carrega_pag_mp();
+       // carrega_pag_mp(P* processo, PG* pagina, MP *m_principal);
     }
 }
-
-//gabi tem q mexer aq
-void carrega_pag_mp(P* processo, PG* pagina, MP*m_principal){ 
-
-    //processo esta esperando (Novo ou bloqueado)
-    int *mp = m_principal->pags_refs[0]; //assim q usa ponteiro? sksksks n lembro
-    
-
-    if (!LRU_cheia(mp, aaaaaaaaaaaa)){ //Caso 1: MP nao esta cheia -- pagina é alocada
-        insere(mp, pagina); 
-    }
-    else{ //Caso 2: A MP esta cheia e aplicaremos a política de substituicao LRU
-        printf("A MP está cheia, useremos a política de substituição LRU para carregar a imagem na MP")
-        mp->fila_lru = retira_fila(mp->fila_lru);
-        insere(mp, pagina);
-
-    }
-
-    printf("A página da imagem do processo X foi carregada para a MP com sucesso\n") //substituir X
-    //estado do processo passa a ser pronto
-    processo->estado = 'Pronto'
-    printf("O processo passou para o estado 'Pronto'\n")
-}
-
-
 
 LRU *retira_fila(LRU *fila) {
     if (fila){
@@ -270,30 +476,39 @@ LRU *retira_fila(LRU *fila) {
     return fila;
 }
 
-// amanda
-P *busca_processo_ms(MS *m_secundaria, char *nome_processo){
 
-    P *aux = m_secundaria->processos;
-    while(aux != NULL && strcmp(aux->identificador, nome_processo) != 0){
-        aux = aux->prox;
+//gabi tem q mexer aq
+//gabi tem q mexer aq
+/*void carrega_pag_mp(P* processo, PG* pagina, MP *m_principal){ 
+
+    //processo esta esperando (Novo ou bloqueado)
+    int *mp = m_principal->pags_refs; //assim q usa ponteiro? sksksks n lembro
+
+
+    if (!LRU_cheia(m_principal->fila_lru, m_principal->tam_mp)){ //Caso 1: MP nao esta cheia -- pagina é alocada
+        insere_pagina(m_principal, processo, *mp); 
     }
-    return aux;
-}
+    else{ //Caso 2: A MP esta cheia e aplicaremos a política de substituicao LRU
+        printf("A MP está cheia, useremos a política de substituição LRU para carregar a imagem na MP");//faltou o ponto e virgula!!!!!!!
+        m_principal->fila_lru = retira_fila(m_principal->fila_lru);
+        insere_pagina(m_principal, processo, *mp);
 
-// amanda
-
-
-// amanda
-LRU *busca_fila(LRU *fila, int end){
-    LRU *aux = fila;
-    while(aux != NULL){
-        if(aux->end_quadro == end) break;
-        aux = aux->prox;
     }
-    return aux;
-}
 
-void mover_final_lista(LRU *lista, int val) {//quando for chamado e resetar a prioridade
+    printf("A página da imagem do processo X foi carregada para a MP com sucesso\n"); //substituir X
+    //estado do processo passa a ser pronto
+    strcpy(processo->estado_processo, 'Pronto'); //aparentemente da certo se fizer strcpy(processo->estado_processo, (const char *) 'Pronto');
+    // processo->estado = 'Pronto'
+    printf("O processo passou para o estado 'Pronto'\n");
+}*/
+
+
+
+
+
+
+
+void moverParaFinal(LRU *lista, int val) {//quando for chamado e resetar a prioridade
     LRU *aux = lista;
     LRU *ant = NULL;
 
@@ -334,65 +549,13 @@ void mover_final_lista(LRU *lista, int val) {//quando for chamado e resetar a pr
     }
 }
 
-LRU *insere_fila(LRU *fila, int end, int tam_max){
-    LRU *novo = NULL;
-    if(!LRU_cheia(LRU, tam_max)){
-        novo = insere_fila_parte2(fila, end);
-    }
-    return novo;
-}
 
-// amanda
-LRU *insere_fila_parte2(LRU *fila, int end){
-    // se o elemento não está na fila, entao vamos inseri-lo
-    if(!busca_fila(fila, end)){
-        LRU *novo;
 
-        novo = (LRU*)malloc(sizeof(LRU));
-        novo->end = end;
 
-        if(!fila) return novo;
-        LRU *aux = fila;
-        while(aux->prox != NULL){
-            aux = aux->prox;
-        }
-        aux->prox = novo;
-        novo->prox = NULL;
-        return fila;
-    }
-    // se o elemento está na fila, entao buscamos e inserimos no final
-    else {
-        LRU *ref = NULL, *aux = fila;
-
-        while(aux->prox != NULL){
-            if(aux->end == end){
-                ref = aux;
-            }
-            aux = aux->prox;
-        }
-        aux->prox = ref;
-        ref->prox = NULL;
-    }
-    return fila;
-}
-
-//bossan
-int LRU_cheia(LRU *fila, int tam_max){
-    int cheia = 1;
-    LRU *aux = fila;
-    for(int c = 0; c<tam_max; c++){
-        if(fila == NULL){
-            cheia = 0;
-            break;
-        }
-        aux = aux->prox;
-    }
-    return cheia;
-}
 
 // amanda
 // como é fila, insere no final
-TP *insere_pagina(MP *m_principal, PG pagina, TP *tab, int p, int m, int end){
+/*TP *insere_pagina(MP *m_principal, PG pagina, TP *tab, int p, int m, int end){
 
     TP *novo;
 
@@ -412,7 +575,7 @@ TP *insere_pagina(MP *m_principal, PG pagina, TP *tab, int p, int m, int end){
     
     aux->prox = novo;
     return tab;
-}
+} Errado fizemos acima um void raioo*/
 
 // amanda
 // e remove do início
@@ -426,51 +589,34 @@ TP *remove_pagina(TP *tab){
     return tab;
 }
 
-// amanda
-TP *preenche_fila(MP *m_principal, P *processo, PG pagina){
-
-    TP *aux;
-    aux = busca_processo_mp(m_principal, processo);
-    if(!aux){
-        TP *aux_proc;
-        aux = processo->tab_paginas;
-        
-        while(aux != NULL){
-            m_principal->fila_paginas = insere_pagina(m_principal, pagina, aux_proc, aux_proc->bit_p, aux_proc->bit_m, aux_proc->end_quadro);
-            aux_proc = aux_proc->prox;
-        }
-    }
-    return aux;
+TP *busca_processo_mp(MP *memoria_principal, P *processo){
+    // implementar
+    return NULL;
 }
+
+// amanda
+// TP *preenche_fila(MP *m_principal, P *processo, PG pagina){
+
+//     TP *aux;
+//     aux = busca_processo_mp(m_principal, processo);
+//     if(!aux){
+//         TP *aux_proc;
+//         aux = processo->tab_paginas;
+        
+//         while(aux != NULL){
+//             insere_pagina(m_principal, processo, );
+//             m_principal->fila_lru = insere_pagina();
+//             aux_proc = aux_proc->prox;
+//         }
+//     }// Amanda o que seria fila_paginas como fazer com a struct nova?? 
+//     return aux;
+// }
 
 
 // hendel
 // acho justo quebrar em funcoes menores (gabi faz)
 
-int n_pag (int endereco_logico, int page_size, int qtd_bits_endereco_logico){
-    int qtd_bits_off_set = casas_decimais_em_binario(page_size);
-    int qtd_bits_num_pag = qtd_bits_endereco_logico - qtd_bits_off_set;
-    int bin_end_log[qtd_bits_endereco_logico];
-    binario(endereco_logico, bin_end_log, qtd_bits_endereco_logico);
-    
-    // adiciona os bits do off set e da pag
-    int bits_off_set[qtd_bits_off_set];
-    int bits_num_pag[qtd_bits_num_pag];
-    int pos = 0;
-    while (pos < qtd_bits_num_pag) {
-        bits_num_pag[pos] = bin_end_log[pos];
-        pos++;
-    }
-    int i = 0;
-    while (i < qtd_bits_off_set) {
-        bits_off_set[i] = bin_end_log[pos];
-        i++;
-        pos++;
-    }
 
-    int num_pag = decimal(bits_num_pag, qtd_bits_num_pag);
-    return num_pag;
-}
 
 int MMU (int endereco_logico, int page_size, int qtd_bits_endereco_logico, TP *tabela) {
     int qtd_bits_off_set = casas_decimais_em_binario(page_size);
@@ -502,25 +648,6 @@ int MMU (int endereco_logico, int page_size, int qtd_bits_endereco_logico, TP *t
 
     return endereco_real;
 }
-
-int casas_decimais_em_binario(int n) {
-    int tamanho_binario = 0;
-    while (n >= 1) {
-        n >>= 1;
-        tamanho_binario++;
-    }
-    return tamanho_binario;
-}
-
-// converte de decimal p binario
-// n -> valor a ser convertido, *binario é o array int
-void binario(int n, int *binario, int tamanho) {
-    int i;
-    for (i = tamanho - 1; i >= 0; i--) {
-        binario[i] = n & 1;
-        n >>= 1;
-    }
-}
 // Converte binário em decimal
 int decimal(int *binario, int tamanho) {
     int valor = 0;
@@ -532,64 +659,7 @@ int decimal(int *binario, int tamanho) {
 
 /* operação de término - processo */
 
-// raian
-void halt_MP(MP *mp, P *proc){
 
-    TP *pag = proc->tab_paginas;
-
-    while(pag!=NULL){  //verifica se pag ta na mp pra exclusao
-        
-        if (pag->bit_p == 1){
-
-            int end = pag->end_quadro;
-            //descobrir numero do quadro!
-            //busca na mp o endereco
-            //exclui a pagina
-        }
-
-        
-    }
-
-    TP *pag = proc->tab_paginas;
-
-    while(pag!= NULL){ 
-        
-        TP * linha = pag;
-
-        free(linha);
-        pag = pag->prox;   
-    }
-    free(proc->tab_paginas;) //exclui tabela de pag do processo da mp
-}
-
-void halt_MS(MS *ms, P *proc){
-
-    P *temp = ms->processos
-    P *aux = temp->prox
-    while(temp!=NULL){ 
-        if(strcmp(aux->identicador, proc->identificador)==0){
-                temp->prox = aux->prox;
-                free(aux);
-                break;
-        }
-        else{
-            aux = aux->prox;
-            temp = temp->prox; 
-        }
-    }
-}
-
-// raian
-void halt(P *proc, MP *mp, MS *ms ){ 
-    
-    halt_MP(mp, proc); //exclui as pags q estao na mp
-    halt_MS(ms, proc); //exclui o processo da ms
-    
-    free(proc->identificador);
-    free(proc->estado_processo);
-    free(proc->tam_imagem);
-    free(proc); 
-}
 
 /* impressões */
 //amanda
@@ -608,16 +678,7 @@ void imprime_tabela_paginas(TP *tab_pags){
     }
 }
 
-// amanda
-void imprime_estado_processo(P *processo){
-    printf("Dados do processo %s: \n", processo->identificador);
-    printf("----------------------\n");
-    printf("Estado do processo: %s \n", processo->estado_processo);
-    printf("Tamanho do processo: %d \n", processo->tam_imagem);
-    printf("Tabela de páginas associada: \n");
-    imprime_tabela_paginas(processo->tab_paginas);
-    printf("\n");
-}
+
 
 //raian
 void ver_mp(MP *mp){
@@ -628,11 +689,11 @@ void ver_mp(MP *mp){
     printf("Número total de quadros: %d\n", num_quadros);
 
     while(!quadro_paginas) {
-        printf("  Bit de Presença: %d\n", tabela_paginas->bit_p);
-        printf("  Bit de Modificação: %d\n", tabela_paginas->bit_m);
-        printf("  Endereço do Quadro na Memória Principal: %d\n", tabela_paginas->end_quadro);
+        printf("  Bit de Presença: %d\n", quadro_paginas->bit_p);
+        printf("  Bit de Modificação: %d\n", quadro_paginas->bit_m);
+        printf("  Endereço do Quadro na Memória Principal: %d\n", quadro_paginas->end_quadro);
         printf("-----------------------\n");
-        quadro_paginas=quadro_paginas->prox;
+        quadro_paginas = quadro_paginas->prox;
     }
 }
 
@@ -663,11 +724,11 @@ void swapper(LRU *lru, TP *tab_paginas) {
     lru = segundo_processo;
     
     TP *aux = tab_paginas;
-    while (aux != null && aux->prox != NULL) {
+    while (aux != NULL && aux->prox != NULL) {
         if (aux->end_quadro == lru->end) {
             aux->bit_p = 0;
             if (aux->bit_m == 1) {
-                atualiza_ms(); // não sei se já tem, mas precisamos de um metodo que atualiza o proc na ms
+                //atualiza_ms(); // não sei se já tem, mas precisamos de um metodo que atualiza o proc na ms
             }
         }
         aux = aux->prox;

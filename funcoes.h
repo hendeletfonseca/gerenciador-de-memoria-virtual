@@ -17,6 +17,7 @@ typedef struct least_recently_used {
     int end;
     struct least_recently_used *prox;
 } LRU;
+
 typedef struct processo {
     char *identificador; // nome do processo lido no arquivo 
     char *estado_processo; // informa em qual estado o processo esta: novo, pronto, bloqueado, executando, finalizado
@@ -31,6 +32,7 @@ typedef struct pagina {
     int *endereco_virtual; // endereco da pag na memoria virtual
     P *processo_associado; // processo a qual a pg esta associada
 } PG;
+
 typedef struct memoria_principal {
     int tam_mp;
     int num_quadros;
@@ -78,7 +80,7 @@ LRU *insere_fila(LRU *fila, int end);
 LRU *insere_fila_parte2(LRU *fila, int end);
 int LRU_cheia(LRU *fila, int tam_max)
 
-TP *insere_pagina(MP *m_principal, PG pagina, TP *tab, int p, int m, int end);
+// TP *insere_pagina(MP *m_principal, PG pagina, TP *tab, int p, int m, int end);
 TP *remove_pagina(TP *tab);  //na tabela de pag? nao faz sentido pra mim
 
 TP *preenche_fila(MP *m_principal, P *processo, PG pagina); //???
